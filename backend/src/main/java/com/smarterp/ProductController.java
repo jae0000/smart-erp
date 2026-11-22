@@ -1,19 +1,53 @@
 package com.smarterp;
 
+import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/products")
 public class ProductController {
-    public record Product(long productId, String productCode, String productName,
-                          String price, long stockQty) {}
     public record ProductList(List<Product> products) {}
 
-    @GetMapping("/api/products")
+    private static final Map<String, Boolean> SUCCESS = Map.of("success", true);
+    private final ProductService service;
+
+    public ProductController(ProductService service) {
+        this.service = service;
+    }
+
+    @GetMapping
     public ProductList list() {
-        return new ProductList(List.of(
-            new Product(1, "P001", "무선 마우스", "25000.00", 12)
-        ));
+        return new ProductList(service.list());
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Boolean> create(@Valid @RequestBody ProductInput product) {
+        service.create(product);
+        return SUCCESS;
+    }
+
+    @PutMapping("/{id}")
+    public Map<String, Boolean> update(@PathVariable("id") long id,
+                                       @Valid @RequestBody ProductInput product) {
+        service.update(id, product);
+        return SUCCESS;
+    }
+
+    @DeleteMapping("/{id}")
+    public Map<String, Boolean> delete(@PathVariable("id") long id) {
+        service.delete(id);
+        return SUCCESS;
     }
 }

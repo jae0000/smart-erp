@@ -11,4 +11,25 @@ java {
 dependencies {
     implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testRuntimeOnly 'com.h2database:h2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform { excludeTags 'oracle' }
+}
+
+tasks.register('oracleTest', Test) {
+    group = 'verification'
+    description = 'Run the product API against a disposable Oracle Database Free instance.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    inputs.file('../database/product.sql')
+    useJUnitPlatform { includeTags 'oracle' }
 }
