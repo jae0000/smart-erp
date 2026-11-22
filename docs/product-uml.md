@@ -1,8 +1,8 @@
 # 상품 관리 UML
 
-## 클래스 다이어그램 · Oracle 연동 후
+## 클래스 다이어그램 · Spring Boot 백엔드
 
-현재 ProductController는 ProductList에 샘플 Product를 담아 반환한다. 아래는 DB 연동 후의 구조다. 컨트롤러가 HTTP 요청과 응답을 맡고 ProductService가 JdbcTemplate으로 SQL을 실행한다.
+ProductController가 URL과 HTTP 상태 코드를 처리한다. 입력 검증을 통과하면 ProductService가 JdbcTemplate으로 SQL을 실행한다. 조회 결과는 ProductList의 products 배열에 담긴다.
 
 ```mermaid
 classDiagram
@@ -23,14 +23,14 @@ classDiagram
         String productCode
         String productName
         BigDecimal price
-        Long stockQty
+        Integer stockQty
     }
     class Product {
-        Long productId
+        long productId
         String productCode
         String productName
         String price
-        Long stockQty
+        long stockQty
     }
     ProductController --> ProductService : 호출
     ProductController ..> ProductInput : 요청 검증
@@ -39,6 +39,8 @@ classDiagram
 ```
 
 ## 시퀀스 다이어그램 · 상품 등록과 목록 갱신
+
+백엔드 등록·조회는 구현되어 있다. Nexacro의 버튼과 Grid는 다음 개발 단계에서 이 순서로 연결한다.
 
 ```mermaid
 sequenceDiagram
