@@ -10,7 +10,7 @@
 
 ## 넥사크로 화면
 
-[Form_Work.xfdl](frontend/FrameBase/Form_Work.xfdl)은 확인한 화면 소스를 재구성한 파일입니다. 다른 PC에서는 Nexacro N v24로 Desktop / Full 프로젝트를 만들고 FrameBase의 같은 이름 Form에 적용한 뒤 QuickView로 실행합니다. API 주소는 Form에 지정한 맥북 IP입니다. 네트워크가 바뀌면 API 주소와 서버의 허용 출처를 확인하세요. 현재 화면 기능은 조회이며, Spring은 두 개발 출처에서 조회와 등록 요청을 허용합니다.
+Windows의 Nexacro Studio N v24에서 [SmartERP.xprj](frontend/SmartERP.xprj)를 열고 [Form_Work.xfdl](frontend/FrameBase/Form_Work.xfdl)을 선택한 뒤 QuickView로 실행합니다. API 주소는 Form에 지정한 맥북 IP입니다. 네트워크가 바뀌면 API 주소와 서버의 허용 출처를 확인하세요. 현재 화면 기능은 조회이며, Spring은 두 개발 출처에서 조회와 등록 요청을 허용합니다.
 
 ## 실행하기
 

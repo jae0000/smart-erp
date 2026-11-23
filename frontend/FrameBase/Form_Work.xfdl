@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
   <Form id="Form_Work" width="1280" height="720" titletext="상품 목록">
     <Layouts>
@@ -20,14 +20,14 @@
                 <Row size="32"/>
               </Rows>
               <Band id="head">
-                <Cell col="0" text="상품 ID"/>
+                <Cell text="상품 ID"/>
                 <Cell col="1" text="상품 코드"/>
                 <Cell col="2" text="상품명"/>
                 <Cell col="3" text="가격"/>
                 <Cell col="4" text="재고 수량"/>
               </Band>
               <Band id="body">
-                <Cell col="0" text="bind:productId"/>
+                <Cell text="bind:productId"/>
                 <Cell col="1" text="bind:productCode"/>
                 <Cell col="2" text="bind:productName"/>
                 <Cell col="3" text="bind:price"/>
@@ -38,10 +38,10 @@
         </Grid>
       </Layout>
     </Layouts>
-    <Script type="xscript5.1"><![CDATA[
-this.btnSearch_onclick = function(obj, e)
+    <Script type="xscript5.1"><![CDATA[this.btnSearch_onclick = function(obj, e)
 {
-    this.doProducts.request("listProducts", "GET", "http://192.168.0.100:8080/api/products");
+    this.doProducts.request("listProducts", "GET",
+        "http://192.168.0.100:8080/api/products");
 };
 
 this.doProducts_onsuccess = function(obj, e)
@@ -50,14 +50,16 @@ this.doProducts_onsuccess = function(obj, e)
     try {
         products = JSON.parse(e.response).products;
         if (!Array.isArray(products)) {
-            throw new Error("응답에 products 배열이 없습니다.");
+            throw new Error("products 배열이 없습니다.");
         }
     } catch (error) {
         this.alert("상품 목록 응답을 읽을 수 없습니다. " + error.message);
         return;
     }
+
     var ds = this.dsProduct;
     ds.clearData();
+
     for (var i = 0; i < products.length; i++) {
         var product = products[i];
         var row = ds.addRow();
@@ -71,9 +73,8 @@ this.doProducts_onsuccess = function(obj, e)
 
 this.doProducts_onerror = function(obj, e)
 {
-    this.alert("상품 조회에 실패했습니다. " + e.errormsg);
-};
-    ]]></Script>
+    this.alert("상품 조회 실패: " + e.errormsg);
+};]]></Script>
     <Objects>
       <DataObject id="doProducts" onsuccess="doProducts_onsuccess" onerror="doProducts_onerror"/>
       <Dataset id="dsProduct">
