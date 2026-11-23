@@ -1,12 +1,16 @@
 # Smart ERP
 
-상품 담당자가 상품코드, 이름, 가격, 재고 수량을 관리하는 개인 프로젝트입니다. Spring Boot는 상품 목록 조회·등록·수정·삭제를 제공하고, Oracle은 상품과 재고를 저장합니다. Windows용 Nexacro 상품 관리 화면을 다음 단계로 개발합니다.
+상품 담당자가 상품코드, 이름, 가격, 재고 수량을 관리하는 개인 프로젝트입니다. Spring Boot는 상품 목록 조회·등록·수정·삭제를 제공하고, Oracle은 상품과 재고를 저장합니다. Windows Nexacro 런타임과 Chrome에서 상품 조회를 확인했습니다.
 
 | 구성 | 기술 | 담당 기능 |
 |---|---|---|
 | 백엔드 | Java 17, Spring Boot 3.5.7, Spring JDBC | HTTP 요청 검증, 상품 CRUD, 오류 응답 |
 | 데이터베이스 | Oracle AI Database 26ai Free | 상품 ID 자동 생성, 상품코드 중복 방지, 가격·재고 저장 |
-| 화면 (예정) | Nexacro N v24 | 상품 목록을 Dataset과 Grid에 표시하고 변경 사항 전송 |
+| 화면 | Nexacro N v24 | 조회 버튼으로 Oracle 상품 목록을 Dataset과 Grid에 표시 |
+
+## 넥사크로 화면
+
+[Form_Work.xfdl](frontend/FrameBase/Form_Work.xfdl)은 확인한 화면 소스를 재구성한 파일입니다. 다른 PC에서는 Nexacro N v24로 Desktop / Full 프로젝트를 만들고 FrameBase의 같은 이름 Form에 적용한 뒤 QuickView로 실행합니다. API 주소는 Form에 지정한 맥북 IP입니다. 네트워크가 바뀌면 API 주소와 서버의 허용 출처를 확인하세요. 현재 화면 기능은 조회이며, Spring은 두 개발 출처에서 조회와 등록 요청을 허용합니다.
 
 ## 실행하기
 

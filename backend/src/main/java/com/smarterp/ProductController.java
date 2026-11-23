@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,11 +27,13 @@ public class ProductController {
         this.service = service;
     }
 
+    @CrossOrigin(origins = {"http://127.0.0.1:4098", "http://192.168.0.104:4098"})
     @GetMapping
     public ProductList list() {
         return new ProductList(service.list());
     }
 
+    @CrossOrigin(origins = {"http://127.0.0.1:4098", "http://192.168.0.104:4098"})
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Boolean> create(@Valid @RequestBody ProductInput product) {
