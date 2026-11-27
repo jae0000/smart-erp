@@ -49,6 +49,33 @@ class ProductApiTest {
     }
 
     @Test
+    void recordsStockChangesAndRejectsAnExcessWithdrawal() throws Exception {
+        createProduct("P001");
+        long id = products().required(0).required("productId").longValue();
+        String path = PATH + "/" + id + "/movements";
+
+        mvc.perform(post(path).contentType(APPLICATION_JSON)
+                        .content("{\"direction\":\"IN\",\"quantity\":2}"))
+                .andExpect(status().isCreated());
+        mvc.perform(post(path).contentType(APPLICATION_JSON)
+                        .content("{\"direction\":\"OUT\",\"quantity\":3}"))
+                .andExpect(status().isCreated());
+        mvc.perform(post(path).contentType(APPLICATION_JSON)
+                        .content("{\"direction\":\"OUT\",\"quantity\":12}"))
+                .andExpect(status().isConflict());
+
+        assertThat(products().required(0).required("stockQty").intValue()).isEqualTo(11);
+        mvc.perform(get(PATH + "/movements"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.movements.length()").value(2))
+                .andExpect(jsonPath("$.movements[0].direction").value("OUT"))
+                .andExpect(jsonPath("$.movements[0].quantity").value(3))
+                .andExpect(jsonPath("$.movements[0].createdAt").isNotEmpty())
+                .andExpect(jsonPath("$.movements[1].direction").value("IN"));
+        mvc.perform(delete(PATH + "/{id}", id)).andExpect(status().isConflict());
+    }
+
+    @Test
     void readsUpdatesAndDeletesTheGeneratedId() throws Exception {
         assertThat(products().size()).isZero();
         createProduct("P001");

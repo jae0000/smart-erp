@@ -5,7 +5,7 @@
       <Layout width="1280" height="720" screenid="Desktop_screen">
         <Static id="staTitle" taborder="0" text="상품 목록" left="24" top="20" width="400" height="36"/>
         <Button id="btnSearch" taborder="1" text="조회" left="624" top="20" width="120" height="36" onclick="btnSearch_onclick"/>
-        <Grid id="grdProduct" taborder="2" binddataset="dsProduct" left="24" top="64" width="720" height="240" autofittype="col">
+        <Grid id="grdProduct" taborder="2" binddataset="dsProduct" left="24" top="64" width="720" height="240" autofittype="col" oncellclick="grdProduct_oncellclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -36,12 +36,244 @@
             </Format>
           </Formats>
         </Grid>
+        <Static id="staProductCode" taborder="3" text="상품 코드" left="24" top="320" width="120" height="24"/>
+        <Edit id="edtProductCode" taborder="4" maxlength="30" left="24" top="348" width="120" height="36"/>
+        <Static id="staProductName" taborder="5" text="상품명" left="154" top="320" width="220" height="24"/>
+        <Edit id="edtProductName" taborder="6" maxlength="100" left="154" top="348" width="220" height="36"/>
+        <Static id="staPrice" taborder="7" text="가격" left="384" top="320" width="110" height="24"/>
+        <Edit id="edtPrice" taborder="8" maxlength="13" left="384" top="348" width="110" height="36"/>
+        <Static id="staStockQty" taborder="9" text="재고 수량" left="504" top="320" width="110" height="24"/>
+        <Edit id="edtStockQty" taborder="10" maxlength="10" left="504" top="348" width="110" height="36"/>
+        <Button id="btnCreate" taborder="11" text="등록" left="624" top="348" width="120" height="36" onclick="btnCreate_onclick"/>
+        <Button id="btnUpdate" taborder="12" text="수정" left="754" top="348" width="100" height="36" onclick="btnUpdate_onclick"/>
+        <Button id="btnDelete" taborder="13" text="삭제" left="864" top="348" width="100" height="36" onclick="btnDelete_onclick"/>
+        <Static id="staMovementQty" text="입출고 수량" left="24" top="402" width="120" height="24"/>
+        <Edit id="edtMovementQty" taborder="14" maxlength="10" left="24" top="430" width="120" height="36"/>
+        <Button id="btnStockIn" taborder="15" text="입고" left="154" top="430" width="100" height="36" onclick="btnStockIn_onclick"/>
+        <Button id="btnStockOut" taborder="16" text="출고" left="264" top="430" width="100" height="36" onclick="btnStockOut_onclick"/>
+        <Button id="btnHistory" taborder="17" text="이력 조회" left="374" top="430" width="110" height="36" onclick="btnHistory_onclick"/>
+        <Grid id="grdHistory" taborder="18" binddataset="dsHistory" left="24" top="476" width="720" height="212" autofittype="col">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="130"/>
+                <Column size="100"/>
+                <Column size="100"/>
+                <Column size="390"/>
+              </Columns>
+              <Rows>
+                <Row size="32" band="head"/>
+                <Row size="32"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="상품 코드"/>
+                <Cell col="1" text="구분"/>
+                <Cell col="2" text="수량"/>
+                <Cell col="3" text="처리 시각 (시간대 포함)"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:productCode"/>
+                <Cell col="1" text="bind:direction"/>
+                <Cell col="2" text="bind:quantity"/>
+                <Cell col="3" text="bind:createdAt"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
       </Layout>
     </Layouts>
-    <Script type="xscript5.1"><![CDATA[this.btnSearch_onclick = function(obj, e)
+    <Script type="xscript5.1"><![CDATA[this.productApiUrl = "http://192.168.0.100:8080/api/products";
+
+this.btnSearch_onclick = function(obj, e)
 {
-    this.doProducts.request("listProducts", "GET",
-        "http://192.168.0.100:8080/api/products");
+    this.doProducts.request("listProducts", "GET", this.productApiUrl);
+};
+
+this.btnCreate_onclick = function(obj, e)
+{
+    this.saveProduct("POST", this.productApiUrl);
+};
+
+this.grdProduct_oncellclick = function(obj, e)
+{
+    if (e.row < 0 || this.productWritePending) {
+        return;
+    }
+    var ds = this.dsProduct;
+    this.selectedProductId = ds.getColumn(e.row, "productId");
+    this.selectedProductCode = ds.getColumn(e.row, "productCode");
+    this.edtProductCode.set_value(this.selectedProductCode);
+    this.edtProductName.set_value(ds.getColumn(e.row, "productName"));
+    this.edtPrice.set_value(ds.getColumn(e.row, "price"));
+    this.edtStockQty.set_value(ds.getColumn(e.row, "stockQty"));
+};
+
+this.btnUpdate_onclick = function(obj, e)
+{
+    if (!this.selectedProductId) {
+        this.alert("수정할 상품을 표에서 선택해 주세요.");
+        return;
+    }
+    this.saveProduct("PUT", this.productApiUrl + "/" + this.selectedProductId);
+};
+
+this.btnDelete_onclick = function(obj, e)
+{
+    if (!this.selectedProductId) {
+        this.alert("삭제할 상품을 표에서 선택해 주세요.");
+        return;
+    }
+    if (this.confirm("상품 " + this.selectedProductCode + "을(를) 삭제할까요?")) {
+        this.writeProduct("DELETE", this.productApiUrl + "/" + this.selectedProductId);
+    }
+};
+
+this.saveProduct = function(method, url)
+{
+    var code = String(this.edtProductCode.value || "").trim();
+    var name = String(this.edtProductName.value || "").trim();
+    var price = String(this.edtPrice.value == null ? "" : this.edtPrice.value).trim();
+    var quantity = String(this.edtStockQty.value == null ? "" : this.edtStockQty.value).trim();
+
+    if (!code || !name) {
+        this.alert("상품 코드와 상품명을 입력해 주세요.");
+        return;
+    }
+    if (!/^\d{1,10}(\.\d{1,2})?$/.test(price)) {
+        this.alert("가격은 정수 10자리, 소수 2자리까지 입력해 주세요.");
+        return;
+    }
+    if (!/^\d{1,10}$/.test(quantity) || Number(quantity) > 2147483647) {
+        this.alert("재고 수량은 0에서 2147483647 사이의 정수로 입력해 주세요.");
+        return;
+    }
+
+    this.writeProduct(method, url, {
+        httpheader: {"Content-Type": "application/json"},
+        postdata: JSON.stringify({
+            productCode: code,
+            productName: name,
+            price: price,
+            stockQty: Number(quantity)
+        })
+    });
+};
+
+this.setProductWritePending = function(pending)
+{
+    this.productWritePending = pending;
+    this.btnCreate.set_enable(!pending);
+    this.btnUpdate.set_enable(!pending);
+    this.btnDelete.set_enable(!pending);
+    this.btnSearch.set_enable(!pending);
+    this.btnStockIn.set_enable(!pending);
+    this.btnStockOut.set_enable(!pending);
+    this.btnHistory.set_enable(!pending);
+};
+
+this.writeProduct = function(method, url, params)
+{
+    if (this.productWritePending) {
+        return;
+    }
+    this.setProductWritePending(true);
+    if (params) {
+        this.doProductWrite.request(method, method, url, params);
+    } else {
+        this.doProductWrite.request(method, method, url);
+    }
+};
+
+this.doProductWrite_onsuccess = function(obj, e)
+{
+    this.setProductWritePending(false);
+    this.selectedProductId = null;
+    this.edtProductCode.set_value("");
+    this.edtProductName.set_value("");
+    this.edtPrice.set_value("");
+    this.edtStockQty.set_value("");
+    this.btnSearch_onclick();
+    if (this.stockMovementPending) {
+        this.edtMovementQty.set_value("");
+        this.btnHistory_onclick();
+    }
+    this.stockMovementPending = false;
+};
+
+this.doProductWrite_onerror = function(obj, e)
+{
+    this.setProductWritePending(false);
+    var action = this.stockMovementPending ? "입출고" : "상품 저장 또는 삭제";
+    this.stockMovementPending = false;
+    this.alert(action + " 실패: " + e.errormsg);
+};
+
+this.btnStockIn_onclick = function(obj, e)
+{
+    this.moveStock("IN");
+};
+
+this.btnStockOut_onclick = function(obj, e)
+{
+    this.moveStock("OUT");
+};
+
+this.moveStock = function(direction)
+{
+    if (this.productWritePending) {
+        return;
+    }
+    if (!this.selectedProductId) {
+        this.alert("입출고할 상품을 표에서 선택해 주세요.");
+        return;
+    }
+    var value = String(this.edtMovementQty.value || "").trim();
+    var quantity = Number(value);
+    if (!/^\d{1,10}$/.test(value) || quantity < 1 || quantity > 2147483647) {
+        this.alert("입출고 수량은 1에서 2147483647 사이의 정수로 입력해 주세요.");
+        return;
+    }
+
+    this.stockMovementPending = true;
+    this.writeProduct("POST", this.productApiUrl + "/" + this.selectedProductId + "/movements", {
+        httpheader: {"Content-Type": "application/json"},
+        postdata: JSON.stringify({direction: direction, quantity: quantity})
+    });
+};
+
+this.btnHistory_onclick = function(obj, e)
+{
+    this.doHistory.request("listMovements", "GET", this.productApiUrl + "/movements");
+};
+
+this.doHistory_onsuccess = function(obj, e)
+{
+    var movements;
+    try {
+        movements = JSON.parse(e.response).movements;
+        if (!Array.isArray(movements)) {
+            throw new Error("movements 배열이 없습니다.");
+        }
+    } catch (error) {
+        this.alert("입출고 이력 응답을 읽을 수 없습니다. " + error.message);
+        return;
+    }
+
+    var ds = this.dsHistory;
+    ds.clearData();
+    for (var i = 0; i < movements.length; i++) {
+        var movement = movements[i];
+        var row = ds.addRow();
+        ds.setColumn(row, "productCode", movement.productCode);
+        ds.setColumn(row, "direction", movement.direction === "IN" ? "입고" : "출고");
+        ds.setColumn(row, "quantity", movement.quantity);
+        ds.setColumn(row, "createdAt", movement.createdAt);
+    }
+};
+
+this.doHistory_onerror = function(obj, e)
+{
+    this.alert("입출고 이력 조회 실패: " + e.errormsg);
 };
 
 this.doProducts_onsuccess = function(obj, e)
@@ -58,6 +290,7 @@ this.doProducts_onsuccess = function(obj, e)
     }
 
     var ds = this.dsProduct;
+    this.selectedProductId = null;
     ds.clearData();
 
     for (var i = 0; i < products.length; i++) {
@@ -77,13 +310,23 @@ this.doProducts_onerror = function(obj, e)
 };]]></Script>
     <Objects>
       <DataObject id="doProducts" onsuccess="doProducts_onsuccess" onerror="doProducts_onerror"/>
+      <DataObject id="doProductWrite" onsuccess="doProductWrite_onsuccess" onerror="doProductWrite_onerror"/>
       <Dataset id="dsProduct">
         <ColumnInfo>
-          <Column id="productId" type="INT" size="4"/>
+          <Column id="productId" type="STRING" size="16"/>
           <Column id="productCode" type="STRING" size="32"/>
           <Column id="productName" type="STRING" size="200"/>
           <Column id="price" type="STRING" size="32"/>
-          <Column id="stockQty" type="INT" size="4"/>
+          <Column id="stockQty" type="STRING" size="16"/>
+        </ColumnInfo>
+      </Dataset>
+      <DataObject id="doHistory" onsuccess="doHistory_onsuccess" onerror="doHistory_onerror"/>
+      <Dataset id="dsHistory">
+        <ColumnInfo>
+          <Column id="productCode" type="STRING" size="32"/>
+          <Column id="direction" type="STRING" size="16"/>
+          <Column id="quantity" type="STRING" size="16"/>
+          <Column id="createdAt" type="STRING" size="64"/>
         </ColumnInfo>
       </Dataset>
     </Objects>

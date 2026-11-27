@@ -1,6 +1,8 @@
 package com.smarterp;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@CrossOrigin(origins = {"http://127.0.0.1:4098", "http://192.168.0.104:4098"})
 @RequestMapping("/api/products")
 public class ProductController {
     public record ProductList(List<Product> products) {}
@@ -27,13 +30,11 @@ public class ProductController {
         this.service = service;
     }
 
-    @CrossOrigin(origins = {"http://127.0.0.1:4098", "http://192.168.0.104:4098"})
     @GetMapping
     public ProductList list() {
         return new ProductList(service.list());
     }
 
-    @CrossOrigin(origins = {"http://127.0.0.1:4098", "http://192.168.0.104:4098"})
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Boolean> create(@Valid @RequestBody ProductInput product) {
@@ -46,6 +47,23 @@ public class ProductController {
                                        @Valid @RequestBody ProductInput product) {
         service.update(id, product);
         return SUCCESS;
+    }
+
+    public enum Direction { IN, OUT }
+
+    public record MovementInput(@NotNull Direction direction, @NotNull @Positive Integer quantity) {}
+
+    @PostMapping("/{id}/movements")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Boolean> moveStock(@PathVariable("id") long id,
+                                          @Valid @RequestBody MovementInput movement) {
+        service.moveStock(id, movement.direction(), movement.quantity());
+        return SUCCESS;
+    }
+
+    @GetMapping("/movements")
+    public Map<String, List<ProductService.StockMovement>> movements() {
+        return Map.of("movements", service.movements());
     }
 
     @DeleteMapping("/{id}")

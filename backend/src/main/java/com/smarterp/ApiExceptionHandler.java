@@ -1,6 +1,8 @@
 package com.smarterp;
 
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -36,5 +38,16 @@ public class ApiExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError duplicateCode() {
         return new ApiError("이미 존재하는 상품코드입니다");
+    }
+    @ExceptionHandler(ResponseStatusException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError stockConflict(ResponseStatusException exception) {
+        return new ApiError(exception.getReason());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError integrityConflict() {
+        return new ApiError("데이터 제약으로 처리할 수 없습니다. 입출고 이력이 있는 상품은 삭제할 수 없습니다.");
     }
 }
